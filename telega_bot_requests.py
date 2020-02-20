@@ -1,75 +1,93 @@
 import requests
-import json
 import pprint
 
 from time import sleep
-
-from telega_bot import bot_conf
+from telega_bot.openweathermap import openweathermap
 
 
 class BotHandler:
-    def __init__(self, token, poll_period_s, offset=1, timeout=10):
+    def __init__(self, token, poll_period_s, offset=-1, timeout=10):
         self.url = "https://api.telegram.org/bot{}/".format(token)
-        self.updates = {}
+        self.updates = []
         self.poll_period = poll_period_s
         self.offset = offset
         self.timeout = timeout
+        self.update_id = None
+        self.last_replied_update_id = None
 
     def get_updates(self):
         method = 'getUpdates'
-        querystring = {'offset': self.last_update_id() + self.offset, 'timeout': self.timeout}
+        update_id = self.last_update(content_type='update_id')
+        if update_id is None:
+            update_id = 0
+        querystring = {'offset': update_id + self.offset, 'timeout': self.timeout}
         resp = requests.get(self.url + method, data=querystring)
         if resp.status_code == 200 and resp.json()['ok'] is True:
             self.updates = resp.json()['result']
+            if len(self.updates) > 0:
+                self.update_id = self.updates[-1]['update_id']
+                self.parse_incoming_text()
         else:
             print('====== {} ERROR code = {}'.format(self.get_updates.__name__, resp.status_code))
 
-    def last_update(self):
+    def last_update(self, content_type=None):
         try:
             ret = self.updates[-1]
-        except IndexError:
+        except IndexError:  # In case bot restarted
             ret = None
+        else:
+            if content_type:
+                if content_type.lower() == 'updates':
+                    pass
+                elif content_type.lower() == 'update_id':
+                    ret = self.update_id
+                elif content_type.lower() == 'message':
+                    ret = ret['message']
+                elif content_type.lower() == 'text':
+                    ret = ret['message']['text']
+                elif content_type.lower() == 'chat_id':
+                    ret = ret['message']['chat']['id']
+                elif content_type.lower() == 'message_id':
+                    ret = ret['message']['message_id']
+                else:
+                    print('====== {} ERROR unknown content_type'.format(self.last_update.__name__))
         return ret
 
-    def last_update_id(self):
-        if len(self.updates) > 0:
-            upd_id = self.last_update()['update_id']
-        else:
-            upd_id = 0
-        return upd_id
+    def send_message_text(self, text, chat_id, reply_to_message_id=None):
+        method = 'sendMessage'
+        querystring = {'chat_id': chat_id, 'text': text}
+        if reply_to_message_id is not None:
+            querystring.update(reply_to_message_id=reply_to_message_id)
+        resp = requests.post(self.url + method, data=querystring)
+        if resp.status_code != 200:
+            print('====== {} ERROR code = {}'.format(self.send_message_text.__name__, resp.status_code))
 
-    def last_message(self):
-        if self.last_update() is not None:
-            ret = self.last_update()['message']
-        else:
-            ret = None
-        return ret
+    def reply_message(self, reply_text, chat_id, message_id):
+        self.send_message_text(reply_text, chat_id, message_id)
 
-    def last_message_text(self):
-        if self.last_message() is not None:
-            ret = self.last_message()['text']
-        else:
-            ret = None
-        return ret
-
-    def send_message_text(self, text):
-        try:
-            chat_id = self.last_message()['chat']['id']
-        except TypeError:
-            print('====== {} ERROR updates is empty'.format(self.send_message_text.__name__))
-        else:
-            method = 'sendMessage'
-            querystring = {'chat_id': chat_id, 'text': text}
-            resp = requests.post(self.url + method, data=querystring)
-            if resp.status_code != 200:
-                print('====== {} ERROR code = {}'.format(self.send_message_text.__name__, resp.status_code))
+    def parse_incoming_text(self):
+        text = self.last_update(content_type='text').lower().split()
+        if len(text) > 1 and (text[0] == 'temp' or text[0] == 'темп'):
+            if self.last_replied_update_id is None or self.last_replied_update_id < self.update_id:
+                self.last_replied_update_id = self.update_id
+                temp = openweathermap.get_temp(" ".join(text[1:]))
+                self.reply_message(temp,
+                                   self.last_update(content_type='chat_id'),
+                                   self.last_update(content_type='message_id'))
 
     def polling(self):
         while True:
             sleep(self.poll_period)
             self.get_updates()
 
-            #self.send_message_text('sample text')
+            # try:
+            #     chat_id = self.last_update(content_type='chat_id')
+            # except TypeError:
+            #     print('====== {} ERROR updates is empty'.format(self.polling.__name__))
+            # else:
+            #     if chat_id:
+            #         self.send_message_text('sample text', chat_id)
+
 
             #print(self.last_message_text())
             #pprint.pprint(self.last_update())
@@ -80,8 +98,4 @@ class BotHandler:
 
 
 if __name__ == '__main__':
-    bot = BotHandler(token=bot_conf.TOKEN, poll_period_s=1)
-    try:
-        bot.polling()
-    except KeyboardInterrupt:
-        exit()
+    pass

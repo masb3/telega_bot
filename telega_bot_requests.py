@@ -3,10 +3,11 @@ import pprint
 
 from time import sleep
 from telega_bot.openweathermap import openweathermap
+from telega_bot.rubik import medicum_registr
 
 
 class BotHandler:
-    def __init__(self, token, poll_period_s, offset=-1, timeout=10):
+    def __init__(self, token, poll_period_s, offset=1, timeout=10):
         self.url = "https://api.telegram.org/bot{}/".format(token)
         self.updates = []
         self.poll_period = poll_period_s
@@ -14,6 +15,8 @@ class BotHandler:
         self.timeout = timeout
         self.update_id = None
         self.last_replied_update_id = None
+
+        self.start_bot()
 
     def get_updates(self):
         method = 'getUpdates'
@@ -66,14 +69,29 @@ class BotHandler:
         self.send_message_text(reply_text, chat_id, message_id)
 
     def parse_incoming_text(self):
-        text = self.last_update(content_type='text').lower().split()
-        if len(text) > 1 and (text[0] == 'temp' or text[0] == 'темп'):
-            if self.last_replied_update_id is None or self.last_replied_update_id < self.update_id:
-                self.last_replied_update_id = self.update_id
-                temp = openweathermap.get_temp(" ".join(text[1:]))
-                self.reply_message(temp,
+        if self.last_replied_update_id is None or self.last_replied_update_id < self.update_id:
+            self.last_replied_update_id = self.update_id
+            text = self.last_update(content_type='text').lower().split()
+
+            repl_txt = ''
+            if len(text) >= 2 and (text[0] == 'temp' or text[0] == 'темп'):
+                repl_txt = str(openweathermap.get_temp(" ".join(text[1:])))
+
+            elif text[0] == 'rubik':
+                resp = medicum_registr.get_free_rubik()
+                resp.insert(0, "total = {}".format(len(resp)))
+                repl_txt = "\n".join(resp)
+
+            if len(repl_txt) > 0:
+                self.reply_message(repl_txt,
                                    self.last_update(content_type='chat_id'),
                                    self.last_update(content_type='message_id'))
+
+    def start_bot(self):
+        try:
+            self.polling()
+        except KeyboardInterrupt:
+            exit()
 
     def polling(self):
         while True:

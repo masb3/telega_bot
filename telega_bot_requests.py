@@ -1,5 +1,6 @@
 import requests
 import pprint
+import threading
 
 from time import sleep
 from telega_bot.openweathermap import openweathermap
@@ -16,6 +17,8 @@ class BotHandler:
         self.update_id = None
         self.last_replied_update_id = None
 
+        self.polling_thread = threading.Thread(target=self.polling)
+        self.polling_thread_stop = False
         self.start_bot()
 
     def get_updates(self):
@@ -88,13 +91,13 @@ class BotHandler:
                                    self.last_update(content_type='message_id'))
 
     def start_bot(self):
-        try:
-            self.polling()
-        except KeyboardInterrupt:
-            exit()
+        self.polling_thread.start()
+
+    def stop_bot(self):
+        self.polling_thread_stop = True
 
     def polling(self):
-        while True:
+        while not self.polling_thread_stop:
             sleep(self.poll_period)
             self.get_updates()
 
@@ -113,6 +116,7 @@ class BotHandler:
             #print(self.last_update_id())
             print(len(self.updates))
             print('==========================================')
+
 
 
 if __name__ == '__main__':

@@ -33,13 +33,31 @@ class BotHandler:
             self.updates = resp.json()['result']
             if len(self.updates) > 0:
                 self.update_id = self.updates[-1]['update_id']
-                self.parse_incoming_message()
+                self.handle_incoming_object()
         else:
             print('====== {} ERROR code = {}'.format(self.get_updates.__name__, resp.status_code))
+
+    def get_object(self):
+        obj = None
+        obj_type = None
+        try:
+            obj = self.updates[-1]
+        except IndexError:  # In case bot restarted
+            pass
+        else:
+            list_of_keys = ['message', 'callback_query']
+            for k in list_of_keys:
+                if k in obj.keys():
+                    obj = obj.get(k)
+                    obj_type = k
+                    break
+
+        return obj, obj_type
 
     def last_update(self, content_type=None):
         try:
             ret = self.updates[-1]
+            print(ret)
         except IndexError:  # In case bot restarted
             ret = None
         else:
@@ -95,28 +113,45 @@ class BotHandler:
                                self.last_update(content_type='message_id',),
                                reply_markup=reply_markup)
 
-    def parse_incoming_message(self):
+    def parse_text(self, text):
+        repl_txt = ''
+        list_of_cmds = ['/rubik', '/temp', '/menu']
+        if text[0] in list_of_cmds:
+            self.bot_command(text)
+
+        elif len(text) >= 2 and (text[0] == 'temp' or text[0] == 'темп'):
+            repl_txt = str(openweathermap.get_temp(" ".join(text[1:])))
+
+        elif text[0] == 'rubik':
+            resp = medicum_registr.get_free_rubik()
+            resp.insert(0, "total = {}".format(len(resp)))
+            repl_txt = "\n".join(resp)
+
+        if len(repl_txt) > 0:
+            self.reply_message(repl_txt,
+                               self.last_update(content_type='chat_id'),
+                               self.last_update(content_type='message_id'))
+
+    def handle_incoming_object(self):
         if self.last_replied_update_id is None or self.last_replied_update_id < self.update_id:
             self.last_replied_update_id = self.update_id
-            text = self.last_update(content_type='text').lower().split()
 
-            repl_txt = ''
-            list_of_cmds = ['/rubik', '/temp', '/menu']
-            if text[0] in list_of_cmds:
-                self.bot_command(text)
+            obj, obj_type = self.get_object()
+            if obj:
+                if 'message' == obj_type:
+                    text = self.last_update(content_type='text').lower().split()
+                    self.parse_text(text)
+                elif 'callback_query' == obj_type:
+                    print('******** here')
+                    print(obj)
 
-            elif len(text) >= 2 and (text[0] == 'temp' or text[0] == 'темп'):
-                repl_txt = str(openweathermap.get_temp(" ".join(text[1:])))
+                    self.reply_message("callback",
+                                       obj['message']['chat']['id'],
+                                       obj['message']['message_id'],
+                                       reply_markup=None)
 
-            elif text[0] == 'rubik':
-                resp = medicum_registr.get_free_rubik()
-                resp.insert(0, "total = {}".format(len(resp)))
-                repl_txt = "\n".join(resp)
-
-            if len(repl_txt) > 0:
-                self.reply_message(repl_txt,
-                                   self.last_update(content_type='chat_id'),
-                                   self.last_update(content_type='message_id'))
+                else:
+                    raise NotImplemented
 
     def start_bot(self):
         self.polling_thread.start()
@@ -129,22 +164,9 @@ class BotHandler:
             sleep(self.poll_period)
             self.get_updates()
 
-            # try:
-            #     chat_id = self.last_update(content_type='chat_id')
-            # except TypeError:
-            #     print('====== {} ERROR updates is empty'.format(self.polling.__name__))
-            # else:
-            #     if chat_id:
-            #         self.send_message_text('sample text', chat_id)
-
-
-            #print(self.last_message_text())
-            #pprint.pprint(self.last_update())
             pprint.pprint(self.updates)
-            #print(self.last_update_id())
             print(len(self.updates))
             print('==========================================')
-
 
 
 if __name__ == '__main__':

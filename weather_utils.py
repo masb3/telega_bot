@@ -1,14 +1,34 @@
+import requests
+import pprint
+
 from telegram import InlineKeyboardButton
 
 
-regions_list = ['eu', 'ru', 'usa', 'asia']
-eu_list = ['Tallinn', 'London', 'Oslo', 'Paris']
-ru_list = ['Moscow', 'Novosibirsk', 'Sochi']
-usa_list = ['Chicago', 'Boston']
-asia_list = ['Tokio', 'Taiwan', 'Beijing']
+regions_list = ['Europe', 'Americas', 'Asia', 'Africa', 'Oceania']
 
 
-def create_keyboard(data_list, buttons_in_row=2):
+def list_of_countries_by_region(region):
+    url = "https://restcountries.eu/rest/v2/region/{}".format(region)
+    response = requests.request("GET", url)
+
+    countries = []
+    for resp in response.json():
+        countries.append(resp['name'])
+    return countries
+
+
+def list_of_cities_by_country(country):
+    # todo: return all cities in country, currently only capital
+    url = "https://restcountries.eu/rest/v2/name/{}".format(country)
+    response = requests.request("GET", url)
+
+    countries = []
+    for resp in response.json():
+        countries.append(resp['capital'])
+    return countries
+
+
+def create_keyboard(data_list, callback_data=None, buttons_in_row=2):
     i = 0
     keyboard = [[]]
     for data in data_list:
@@ -16,7 +36,12 @@ def create_keyboard(data_list, buttons_in_row=2):
             i += 1
             keyboard.append([])
 
-        keyboard[i].append(InlineKeyboardButton(data.upper(), callback_data=data))
+        if callback_data == 'country':
+            cb = callback_data + ':' + data
+        else:
+            cb = data
+
+        keyboard[i].append(InlineKeyboardButton(data, callback_data=cb))
     return keyboard
 
 
@@ -24,16 +49,9 @@ def create_regions_keyboard():
     return create_keyboard(regions_list)
 
 
-def create_cities_keyboard(region):
-    if region == 'eu':
-        region_list = eu_list[:]
-    elif region == 'ru':
-        region_list = ru_list[:]
-    elif region == 'usa':
-        region_list = usa_list[:]
-    elif region == 'asia':
-        region_list = asia_list[:]
-    else:
-        region_list = []
+def create_countries_keyboard(region):
+    return create_keyboard(list_of_countries_by_region(region), callback_data='country')
 
-    return create_keyboard(region_list)
+
+def create_cities_keyboard(country):
+    return create_keyboard(list_of_cities_by_country(country))

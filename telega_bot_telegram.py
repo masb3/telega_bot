@@ -17,7 +17,9 @@ def button(update, context):
     temperature = None
 
     if query.data in weather_utils.regions_list:
-        keyboard = weather_utils.create_cities_keyboard(query.data)
+        keyboard = weather_utils.create_countries_keyboard(query.data)
+    elif 'country:' in query.data:
+        keyboard = weather_utils.create_cities_keyboard(query.data.replace('country:', ''))
     else:
         temperature = openweathermap.get_temp(update.callback_query.data)
 

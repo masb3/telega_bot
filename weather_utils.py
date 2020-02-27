@@ -1,5 +1,6 @@
 import requests
 import pprint
+import json
 
 from telegram import InlineKeyboardButton
 
@@ -18,13 +19,12 @@ def list_of_countries_by_region(region):
 
 
 def list_of_cities_by_country(country):
-    # todo: return all cities in country, currently only capital
-    url = "https://restcountries.eu/rest/v2/name/{}".format(country)
-    response = requests.request("GET", url)
-
     countries = []
-    for resp in response.json():
-        countries.append(resp['capital'])
+    with open('geo.json') as json_file:
+        data = json.load(json_file)
+        for p in data[country]:
+            countries.append(p)
+
     return countries
 
 
@@ -54,4 +54,4 @@ def create_countries_keyboard(region):
 
 
 def create_cities_keyboard(country):
-    return create_keyboard(list_of_cities_by_country(country))
+    return create_keyboard(list_of_cities_by_country(country), buttons_in_row=3)

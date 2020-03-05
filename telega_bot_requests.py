@@ -97,7 +97,7 @@ class BotHandler:
         repl_txt = ''
         reply_markup = None
         if len(cmd) >= 2 and (cmd[0] == 'temp' or cmd[0] == 'темп'):
-            repl_txt = str(openweathermap.get_temp(" ".join(cmd[1:])))
+            repl_txt = str(openweathermap.get_temp_by_city_name(" ".join(cmd[1:])))
         elif cmd[0] == '/temp':
             repl_txt = 'some text'
             reply_markup = '{"inline_keyboard": [[{"text": "button 1", "callback_data": "service1"}, {"text": "button 2", "callback_data": "service2"}]]}'
@@ -120,7 +120,7 @@ class BotHandler:
             self.bot_command(text)
 
         elif len(text) >= 2 and (text[0] == 'temp' or text[0] == 'темп'):
-            repl_txt = str(openweathermap.get_temp(" ".join(text[1:])))
+            repl_txt = str(openweathermap.get_temp_by_city_name(" ".join(text[1:])))
 
         elif text[0] == 'rubik':
             resp = medicum_registr.get_free_rubik()

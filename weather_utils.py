@@ -2,47 +2,63 @@ import requests
 import pprint
 import json
 
+
 from telegram import InlineKeyboardButton
+from telega_bot import geonames_conf
 
 
 regions_list = ['Europe', 'Americas', 'Asia', 'Africa', 'Oceania']
+regions_dict = {'Europe': 'EU', 'Americas': 'NA', 'Asia': 'AS', 'Africa': 'AF', 'Oceania': 'OC'}  # TODO: check others
 
 
 def list_of_countries_by_region(region):
-    url = "https://restcountries.eu/rest/v2/region/{}".format(region)
+    url = "http://api.geonames.org/searchJSON?continentCode={}&username={}".\
+        format(regions_dict[region], geonames_conf.API_TOKEN)
     response = requests.request("GET", url)
 
-    countries = []
-    for resp in response.json():
-        countries.append(resp['name'])
-    return countries
+    countries_d = {}
+    for resp in response.json()['geonames'][1:]:
+        countries_d.setdefault(resp['countryName'], resp['countryCode'])
+    return countries_d
 
 
 def list_of_cities_by_country(country):
-    countries = []
-    with open('geo.json') as json_file:
-        data = json.load(json_file)
-        for p in data[country]:
-            countries.append(p)
+    url = 'http://api.geonames.org/searchJSON?country={}&cities=cities15000&username={}'.\
+        format(country, geonames_conf.API_TOKEN)
+    response = requests.request("GET", url)
 
-    return countries
+    cities_d = {}
+    for resp in response.json()['geonames'][1:]:
+        cities_d.setdefault(resp['name'], resp['geonameId'])
+
+    return cities_d
 
 
 def create_keyboard(data_list, callback_data=None, buttons_in_row=2):
     i = 0
     keyboard = [[]]
-    for data in data_list:
-        if len(keyboard[i]) == buttons_in_row:
-            i += 1
-            keyboard.append([])
 
-        if callback_data == 'country':
-            cb = callback_data + ':' + data
-        else:
+    if callback_data == 'country' or callback_data == 'city':
+        for k in data_list.keys():
+            if len(keyboard[i]) == buttons_in_row:
+                i += 1
+                keyboard.append([])
+
+            cb = callback_data + ':' + k + ':' + str(data_list[k])
+
+            keyboard[i].append(InlineKeyboardButton(k, callback_data=cb))
+        return keyboard
+
+    else:
+        for data in data_list:
+            if len(keyboard[i]) == buttons_in_row:
+                i += 1
+                keyboard.append([])
+
             cb = data
 
-        keyboard[i].append(InlineKeyboardButton(data, callback_data=cb))
-    return keyboard
+            keyboard[i].append(InlineKeyboardButton(data, callback_data=cb))
+        return keyboard
 
 
 def create_regions_keyboard():
@@ -54,4 +70,4 @@ def create_countries_keyboard(region):
 
 
 def create_cities_keyboard(country):
-    return create_keyboard(list_of_cities_by_country(country), buttons_in_row=3)
+    return create_keyboard(list_of_cities_by_country(country), callback_data='city', buttons_in_row=3)

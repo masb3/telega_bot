@@ -1,5 +1,6 @@
 import logging
 import telegram
+import re
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackQueryHandler
@@ -19,9 +20,9 @@ def button(update, context):
     if query.data in weather_utils.regions_list:
         keyboard = weather_utils.create_countries_keyboard(query.data)
     elif 'country:' in query.data:
-        keyboard = weather_utils.create_cities_keyboard(query.data.replace('country:', ''))
-    else:
-        temperature = openweathermap.get_temp(update.callback_query.data)
+        keyboard = weather_utils.create_cities_keyboard(query.data[-2::1])
+    elif 'city:' in query.data:
+        temperature = openweathermap.get_temp_by_city_id(re.findall(r'\d+', update.callback_query.data)[0])
 
     if keyboard:
         text = "Выбран регион: {}".format(query.data)
@@ -46,7 +47,7 @@ def text_handler(update, context):
     try:
         text = update.message.text.lower().split(' ')
         if len(text) >= 2 and 'temp' == text[0]:
-            temp = openweathermap.get_temp(text[1])
+            temp = openweathermap.get_temp_by_city_name(text[1])
             context.bot.send_message(chat_id=update.effective_chat.id,
                                      reply_to_message_id=update.effective_message.message_id,
                                      text=temp)

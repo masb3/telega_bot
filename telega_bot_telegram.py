@@ -15,20 +15,25 @@ def button(update, context):
 
     keyboard = None
     reply_markup = None
-    temperature = None
+    text = None
 
-    if query.data in weather_utils.regions_list:
-        keyboard = weather_utils.create_countries_keyboard(query.data)
+    #  Get region/country/city name between ::, eg. region:Europe:EU
+    pattern = r'.*?:(.*):.*'
+    match = re.search(pattern, query.data)
+    data_name = match.group(1)
+
+    if 'region:' in query.data:
+        keyboard = weather_utils.create_countries_keyboard(query.data[-2::1])
+        text = "Выбран регион: {}".format(data_name)
     elif 'country:' in query.data:
         keyboard = weather_utils.create_cities_keyboard(query.data[-2::1])
+        text = "Выбрана страна: {}".format(data_name)
     elif 'city:' in query.data:
         temperature = openweathermap.get_temp_by_city_id(re.findall(r'\d+', update.callback_query.data)[0])
+        text = "{} {}".format(data_name, temperature)
 
     if keyboard:
-        text = "Выбран регион: {}".format(query.data)
         reply_markup = InlineKeyboardMarkup(keyboard)
-    else:
-        text = "{} {}".format(query.data, temperature)
 
     # context.bot.edit_message_text(chat_id=query.message.chat_id,
     #                               message_id=query.message.message_id,

@@ -7,7 +7,7 @@ from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, Callb
 
 from telega_bot import bot_conf, weather_utils
 from telega_bot.openweathermap import openweathermap
-from telega_bot.rubik import medicum_registr
+from rubik import medicum_registr
 
 
 def button(update, context):

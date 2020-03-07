@@ -5,7 +5,6 @@ cryptography==2.8
 decorator==4.4.1
 future==0.18.2
 idna==2.8
-pkg-resources
 pycparser==2.19
 python-telegram-bot==12.4.2
 requests==2.22.0

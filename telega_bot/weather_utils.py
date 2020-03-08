@@ -74,7 +74,7 @@ def create_regions_keyboard():
 
 
 def create_countries_keyboard(region):
-    return create_keyboard(dict_by_api_param(region, 'countries'), callback_data='country')
+    return create_keyboard(dict_by_api_param(region, 'countries'), callback_data='country', buttons_in_row=3)
 
 
 def create_cities_keyboard(country):

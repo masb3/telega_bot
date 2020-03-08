@@ -4,7 +4,7 @@ from telega_bot.bot_conf import *
 
 
 
-bot = telebot.TeleBot(TOKEN)
+bot = telebot.TeleBot(TELEGRAM_TOKEN)
 
 
 @bot.message_handler(commands=['start'])

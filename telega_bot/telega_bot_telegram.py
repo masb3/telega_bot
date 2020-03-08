@@ -88,7 +88,7 @@ def register_all_handlers(dispatcher):
 
 
 if __name__ == '__main__':
-    updater = Updater(token=bot_conf.TOKEN, use_context=True)
+    updater = Updater(token=bot_conf.TELEGRAM_TOKEN, use_context=True)
     dispatcher = updater.dispatcher
 
     register_all_handlers(dispatcher)

@@ -1,9 +1,9 @@
 import requests
 import pprint
 
-from telega_bot.openweathermap import conf
+from telega_bot import bot_conf
 
-API_KEY = conf.API_KEY
+API_KEY = bot_conf.OPENWEATHERMAP_API_KEY
 URL = "http://api.openweathermap.org/data/2.5/weather?q={}&units=metric&appid={}"
 URL_BY_CITY_ID = "http://api.openweathermap.org/data/2.5/weather?id={}&units=metric&appid={}"
 

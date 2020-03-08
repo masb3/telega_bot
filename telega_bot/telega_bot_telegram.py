@@ -6,7 +6,7 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackQueryHandler
 
 from telega_bot import bot_conf, weather_utils
-from telega_bot.openweathermap import openweathermap
+from telega_bot import openweathermap
 from rubik import medicum_registr
 
 

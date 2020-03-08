@@ -4,7 +4,7 @@ import json
 
 
 from telegram import InlineKeyboardButton
-from telega_bot import geonames_conf
+from telega_bot import bot_conf
 
 
 regions_dict = {'Europe': 'EU', 'Americas': 'NA', 'Asia': 'AS', 'Africa': 'AF', 'Oceania': 'OC'}  # TODO: check others
@@ -25,12 +25,12 @@ def dict_by_api_param(param_val, param_name):
     else:  # No cache match
         if param_name == 'cities':
             url = 'http://api.geonames.org/searchJSON?country={}&cities=cities15000&username={}'. \
-                format(param_val, geonames_conf.API_TOKEN)
+                format(param_val, bot_conf.GEONAMES_API_KEY)
             key1_in_resp = 'name'
             key2_in_resp = 'geonameId'
         elif param_name == 'countries':
             url = "http://api.geonames.org/searchJSON?continentCode={}&username={}". \
-                format(param_val, geonames_conf.API_TOKEN)
+                format(param_val, bot_conf.GEONAMES_API_KEY)
             key1_in_resp = 'countryName'
             key2_in_resp = 'countryCode'
         else:

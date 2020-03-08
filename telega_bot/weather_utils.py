@@ -4,7 +4,6 @@ import json
 
 
 from telegram import InlineKeyboardButton
-from telega_bot import bot_conf
 
 
 regions_dict = {'Europe': 'EU', 'Americas': 'NA', 'Asia': 'AS', 'Africa': 'AF', 'Oceania': 'OC'}  # TODO: check others

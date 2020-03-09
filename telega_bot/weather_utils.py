@@ -60,7 +60,10 @@ def create_keyboard(data_list, callback_data=None, buttons_in_row=2):
     i = 0
     keyboard = [[]]
 
-    if callback_data == 'country' or callback_data == 'city' or callback_data == 'region':
+    if callback_data == 'country' or \
+            callback_data == 'city' or \
+            callback_data == 'region' or \
+            callback_data == 'save_settings':
         for k in data_list.keys():
             if len(keyboard[i]) == buttons_in_row:
                 i += 1
@@ -83,3 +86,7 @@ def create_countries_keyboard(region):
 
 def create_cities_keyboard(country):
     return create_keyboard(dict_by_api_param(country, 'cities'), callback_data='city', buttons_in_row=3)
+
+
+def create_save_settings_keyboard():
+    return create_keyboard({'YES': 'yes', 'NO': 'no'}, callback_data='save_settings')

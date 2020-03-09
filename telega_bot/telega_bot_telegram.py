@@ -30,6 +30,9 @@ def button(update, context):
     elif 'city:' in query.data:
         temperature = openweathermap.get_temp_by_city_id(re.findall(r'\d+', update.callback_query.data)[0])
         text = "{} {}".format(data_name, temperature)
+    elif 'save_settings:' in query.data:
+        keyboard = weather_utils.create_regions_keyboard()
+        text = 'Пожалуйста выберите:'
 
     if keyboard:
         reply_markup = InlineKeyboardMarkup(keyboard)
@@ -60,10 +63,10 @@ def text_handler(update, context):
 
 
 def temp(update, context):
-    reply_markup = InlineKeyboardMarkup(weather_utils.create_regions_keyboard())
+    reply_markup = InlineKeyboardMarkup(weather_utils.create_save_settings_keyboard())
     context.bot.send_message(chat_id=update.effective_chat.id,
                              reply_to_message_id=update.effective_message.message_id,
-                             text='Пожалуйста выберите:',
+                             text='Do you want me to remember your choice?',
                              reply_markup=reply_markup)
 
     # reply_markup = telegram.ReplyKeyboardRemove()

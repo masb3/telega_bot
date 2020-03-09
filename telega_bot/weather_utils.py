@@ -44,6 +44,10 @@ def dict_by_api_param(param_val, param_name):
             for resp in response.json()['geonames'][1:]:
                 ret_dict.setdefault(resp[key1_in_resp], resp[key2_in_resp])
 
+            # Manually add Tallinn to list
+            if param_val == 'EE':
+                ret_dict.setdefault('Tallinn', 862995)  # 588409
+
         #  Add to cache last API resp
         if param_name == 'cities':
             cached_cities_api_call.setdefault(param_val, ret_dict)

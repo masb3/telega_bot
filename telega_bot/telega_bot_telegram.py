@@ -1,11 +1,12 @@
 import logging
 import telegram
 import re
+import pprint
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackQueryHandler
 
-from telega_bot import bot_conf, weather_utils, openweathermap
+from telega_bot import bot_conf, weather_utils, openweathermap, db_utils
 from rubik import medicum_registr
 
 
@@ -22,17 +23,32 @@ def button(update, context):
     data_name = match.group(1)
 
     if 'region:' in query.data:
+        user_id = db_utils.get_saved_user_id(update.effective_user['id'])
+        if user_id is not None:
+            db_utils.update_last_region(data_name, query.data[-2::1], user_id)
+
         keyboard = weather_utils.create_countries_keyboard(query.data[-2::1])
         text = "Выбран регион: {}".format(data_name)
     elif 'country:' in query.data:
+        user_id = db_utils.get_saved_user_id(update.effective_user['id'])
+        if user_id is not None:
+            db_utils.update_last_country(data_name, query.data[-2::1], user_id)
+
         keyboard = weather_utils.create_cities_keyboard(query.data[-2::1])
         text = "Выбрана страна: {}".format(data_name)
     elif 'city:' in query.data:
+        user_id = db_utils.get_saved_user_id(update.effective_user['id'])
+        if user_id is not None:
+            db_utils.update_last_city(data_name, re.findall(r'\d+', update.callback_query.data)[0], user_id)
+
         temperature = openweathermap.get_temp_by_city_id(re.findall(r'\d+', update.callback_query.data)[0])
         text = "{} {}".format(data_name, temperature)
     elif 'save_settings:' in query.data:
         keyboard = weather_utils.create_regions_keyboard()
         text = 'Пожалуйста выберите:'
+
+        if 'save_settings:YES:yes' == query.data:
+            db_utils.save_user(update)
 
     if keyboard:
         reply_markup = InlineKeyboardMarkup(keyboard)
@@ -63,14 +79,34 @@ def text_handler(update, context):
 
 
 def temp(update, context):
+    text = 'Do you want me to remember your choice?'
     reply_markup = InlineKeyboardMarkup(weather_utils.create_save_settings_keyboard())
+
+    if db_utils.get_saved_user_id(update.effective_user['id']) is not None:
+        last_city = db_utils.get_last_city(update.effective_user['id'])
+        if last_city:
+            temperature = openweathermap.get_temp_by_city_id(last_city[1])
+            text = "{} {}".format(last_city[0], temperature)
+            reply_markup = None
+
     context.bot.send_message(chat_id=update.effective_chat.id,
                              reply_to_message_id=update.effective_message.message_id,
-                             text='Do you want me to remember your choice?',
+                             text=text,
                              reply_markup=reply_markup)
 
     # reply_markup = telegram.ReplyKeyboardRemove()
     # context.bot.send_message(chat_id=update.effective_chat.id, text="I'm back.", reply_markup=reply_markup)
+
+
+def temp_update(update, context):
+    db_utils.reset_user_is_set(update.effective_user['id'])
+    text = 'Do you want me to remember your choice?'
+    reply_markup = InlineKeyboardMarkup(weather_utils.create_save_settings_keyboard())
+
+    context.bot.send_message(chat_id=update.effective_chat.id,
+                             reply_to_message_id=update.effective_message.message_id,
+                             text=text,
+                             reply_markup=reply_markup)
 
 
 def rubik(update, context):
@@ -84,6 +120,7 @@ def rubik(update, context):
 
 def register_all_handlers(dispatcher):
     dispatcher.add_handler(CommandHandler('temp', temp))
+    dispatcher.add_handler(CommandHandler('temp_update', temp_update))
     dispatcher.add_handler(CommandHandler('rubik', rubik))
     dispatcher.add_handler(MessageHandler(Filters.text, text_handler))
 

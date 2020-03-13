@@ -81,13 +81,18 @@ class PostgreSQLHandler:
             # read connection parameters
 
             # connect to the PostgreSQL server
-            params = {'database': bot_conf.TELEGA_DB_NAME,
-                      'user': bot_conf.TELEGA_DB_USER,
-                      'password': bot_conf.TELEGA_DB_PASS,
-                      'host': bot_conf.TELEGA_DB_HOST,
-                      'port': bot_conf.TELEGA_DB_PORT
-                      }
-            conn = psycopg2.connect(**params)
+
+            # local
+            # params = {'database': bot_conf.TELEGA_DB_NAME,
+            #           'user': bot_conf.TELEGA_DB_USER,
+            #           'password': bot_conf.TELEGA_DB_PASS,
+            #           'host': bot_conf.TELEGA_DB_HOST,
+            #           'port': bot_conf.TELEGA_DB_PORT
+            #           }
+            # conn = psycopg2.connect(**params)
+
+            # heroku
+            conn = psycopg2.connect(bot_conf.TELEGA_DB_HOST, sslmode='require')
 
             # create a cursor
             cur = conn.cursor()

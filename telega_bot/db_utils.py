@@ -79,7 +79,6 @@ class PostgreSQLHandler:
         conn = None
         try:
             # read connection parameters
-            params = config()
 
             # connect to the PostgreSQL server
             params = {'database': bot_conf.TELEGA_DB_NAME,

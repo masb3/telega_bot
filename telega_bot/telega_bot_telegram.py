@@ -10,7 +10,7 @@ from telega_bot import bot_conf, weather_utils, openweathermap, db_utils
 from rubik import medicum_registr
 
 
-def button(update, context):
+def callback_handler(update, context):
     query = update.callback_query
 
     keyboard = None
@@ -124,7 +124,7 @@ def register_all_handlers(dispatcher):
     dispatcher.add_handler(CommandHandler('rubik', rubik))
     dispatcher.add_handler(MessageHandler(Filters.text, text_handler))
 
-    dispatcher.add_handler(CallbackQueryHandler(button))
+    dispatcher.add_handler(CallbackQueryHandler(callback_handler))
 
 
 if __name__ == '__main__':

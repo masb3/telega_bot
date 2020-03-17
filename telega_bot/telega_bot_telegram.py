@@ -41,8 +41,10 @@ def callback_handler(update, context):
         if user_id is not None:
             db_utils.update_last_city(data_name, re.findall(r'\d+', update.callback_query.data)[0], user_id)
 
-        temperature = openweathermap.get_temp_by_city_id(re.findall(r'\d+', update.callback_query.data)[0])
-        text = "{} {}".format(data_name, temperature)
+        temp, feels_like, wind, main = \
+            openweathermap.get_temp_by_city_id(re.findall(r'\d+', update.callback_query.data)[0])
+        text = "{} \U0001F321 {}\nFeels like: {}\nWind: {} m/s\n{}".\
+            format(data_name, temp, feels_like, wind, main)
     elif 'save_settings:' in query.data:
         keyboard = weather_utils.create_regions_keyboard()
         text = 'Пожалуйста выберите:'
@@ -85,8 +87,10 @@ def temp(update, context):
     if db_utils.get_saved_user_id(update.effective_user['id']) is not None:
         last_city = db_utils.get_last_city(update.effective_user['id'])
         if last_city:
-            temperature = openweathermap.get_temp_by_city_id(last_city[1])
-            text = "{} {}".format(last_city[0], temperature)
+            temp, feels_like, wind, main = \
+                openweathermap.get_temp_by_city_id(last_city[1])
+            text = "{} \U0001F321 {}\nFeels like: {}\nWind: {} m/s\n{}".\
+                format(last_city[0], temp, feels_like, wind, main)
             reply_markup = None
 
     context.bot.send_message(chat_id=update.effective_chat.id,

@@ -1,11 +1,13 @@
 import requests
 import pprint
+import datetime
 
 from telega_bot import bot_conf
 
 API_KEY = bot_conf.OPENWEATHERMAP_API_KEY
 URL = "http://api.openweathermap.org/data/2.5/weather?q={}&units=metric&appid={}"
 URL_BY_CITY_ID = "http://api.openweathermap.org/data/2.5/weather?id={}&units=metric&appid={}"
+URL_TOMORROW_BY_CITY_ID = "http://api.openweathermap.org/data/2.5/forecast?id={}&units=metric&appid={}"
 
 # Openweathermap Weather codes and corressponding emojis
 thunderstorm = u'\U0001F4A8'  # Code: 200's, 900, 901, 902, 905
@@ -72,6 +74,26 @@ def get_temp_by_city_id(city_id):
         wind = 'NaN'
         main = 'NaN'
     return temp, feels_like, wind, main
+
+
+def get_temp_tomorrow_by_city_id(city_id):
+    resp = requests.get(URL_TOMORROW_BY_CITY_ID.format(city_id, API_KEY))
+    if resp.status_code == 200:
+        text = "{}\n".format(resp.json()['city']['name'])
+        for i in range(3, 8, 2):
+            dt = datetime.datetime.utcfromtimestamp(resp.json()['list'][i]['dt']).strftime('%m.%d %H:%M')
+            temp = resp.json()['list'][i]['main']['temp']
+            feels_like = resp.json()['list'][i]['main']['feels_like']
+            wind = resp.json()['list'][i]['wind']['speed']
+            main = resp.json()['list'][i]['weather'][0]['description'][0].upper() + \
+                   resp.json()['list'][i]['weather'][0]['description'][1:] \
+                   + ' ' + get_emoji(resp.json()['list'][i]['weather'][0]['id'])
+
+            text += "{}\n\U0001F321 {}\nFeels like: {}\nWind: {} m/s\n{}\n\n".\
+                format(dt, temp, feels_like, wind, main)
+    else:
+        text = 'NaN'
+    return text
 
 
 if __name__ == '__main__':

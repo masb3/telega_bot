@@ -56,37 +56,50 @@ def dict_by_api_param(param_val, param_name):
     return ret_dict
 
 
-def create_keyboard(data_list, callback_data=None, buttons_in_row=2):
+def create_keyboard(data_list, callback_data, buttons_in_row=2):
     i = 0
     keyboard = [[]]
 
-    if callback_data == 'country' or \
-            callback_data == 'city' or \
-            callback_data == 'region' or \
-            callback_data == 'save_settings':
-        for k in data_list.keys():
-            if len(keyboard[i]) == buttons_in_row:
-                i += 1
-                keyboard.append([])
+    for k in data_list.keys():
+        if len(keyboard[i]) == buttons_in_row:
+            i += 1
+            keyboard.append([])
 
-            cb = callback_data + ':' + k + ':' + str(data_list[k])
+        cb = callback_data + ':' + k + ':' + str(data_list[k])
 
-            keyboard[i].append(InlineKeyboardButton(k, callback_data=cb))
+        keyboard[i].append(InlineKeyboardButton(k, callback_data=cb))
 
     return keyboard
 
 
-def create_regions_keyboard():
-    return create_keyboard(regions_dict, callback_data='region')
+def create_regions_keyboard(is_temp_tomorrow=False):
+    if is_temp_tomorrow:
+        callback_data = 'region_tomorrow'
+    else:
+        callback_data = 'region'
+    return create_keyboard(regions_dict, callback_data=callback_data)
 
 
-def create_countries_keyboard(region):
-    return create_keyboard(dict_by_api_param(region, 'countries'), callback_data='country', buttons_in_row=3)
+def create_countries_keyboard(region, is_temp_tomorrow=False):
+    if is_temp_tomorrow:
+        callback_data = 'country_tomorrow'
+    else:
+        callback_data = 'country'
+
+    return create_keyboard(dict_by_api_param(region, 'countries'), callback_data=callback_data, buttons_in_row=3)
 
 
-def create_cities_keyboard(country):
-    return create_keyboard(dict_by_api_param(country, 'cities'), callback_data='city', buttons_in_row=3)
+def create_cities_keyboard(country, is_temp_tomorrow=False):
+    if is_temp_tomorrow:
+        callback_data = 'city_tomorrow'
+    else:
+        callback_data = 'city'
+    return create_keyboard(dict_by_api_param(country, 'cities'), callback_data=callback_data, buttons_in_row=3)
 
 
-def create_save_settings_keyboard():
-    return create_keyboard({'YES': 'yes', 'NO': 'no'}, callback_data='save_settings')
+def create_save_settings_keyboard(temp_tomorrow=False):
+    if temp_tomorrow:
+        callback_data = 'save_settings_tomorrow'
+    else:
+        callback_data = 'save_settings'
+    return create_keyboard({'YES': 'yes', 'NO': 'no'}, callback_data=callback_data)

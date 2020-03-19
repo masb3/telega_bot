@@ -80,7 +80,13 @@ def get_temp_tomorrow_by_city_id(city_id):
     resp = requests.get(URL_TOMORROW_BY_CITY_ID.format(city_id, API_KEY))
     if resp.status_code == 200:
         text = "{}\n".format(resp.json()['city']['name'])
-        for i in range(3, 8, 2):
+
+        find_six_morning = 0
+        for find_six_morning in range(len(resp.json()['list'])):
+            if '06:00:00' in resp.json()['list'][find_six_morning]['dt_txt']:
+                break
+
+        for i in range(find_six_morning, find_six_morning+5, 2):
             dt = datetime.datetime.utcfromtimestamp(resp.json()['list'][i]['dt']).strftime('%m.%d %H:%M')
             temp = resp.json()['list'][i]['main']['temp']
             feels_like = resp.json()['list'][i]['main']['feels_like']

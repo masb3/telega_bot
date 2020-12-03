@@ -2,6 +2,7 @@
 Choose region, country, city.  
 Decide whether you want to remember your choice.  
 Reset your choice anytime to select new weather data location.
+Deployed on Heroku.
 
 ### Used libs
 - [python-telegram-bot](https://github.com/python-telegram-bot/python-telegram-bot/) - Telegram BOT API wrapper
